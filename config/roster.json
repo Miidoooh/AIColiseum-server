@@ -1,0 +1,12 @@
+{
+  "entrants": [
+    { "model": "openai/gpt-6.1-sol", "label": "GPT-6.1 Sol", "lab": "OpenAI", "bot": "fox" },
+    { "model": "anthropic/claude-sonnet-5.5", "label": "Claude Sonnet 5.5", "lab": "Anthropic", "bot": "saint" },
+    { "model": "google/gemini-3.8-flash", "label": "Gemini 3.8 Flash", "lab": "Google", "bot": "rat" },
+    { "model": "x-ai/grok-4.7", "label": "Grok 4.7", "lab": "xAI", "bot": "brute" },
+    { "model": "deepseek/deepseek-v4.1-flash", "label": "DeepSeek V4.1 Flash", "lab": "DeepSeek", "bot": "viper" },
+    { "model": "qwen/qwen3.8-max-0902", "label": "Qwen 3.8 Max", "lab": "Alibaba", "bot": "ghost" },
+    { "model": "mistralai/mistral-large-4-0", "label": "Mistral Large 4", "lab": "Mistral", "bot": "mule" },
+    { "model": "moonshotai/kimi-k3", "label": "Kimi K3", "lab": "Moonshot AI", "bot": "gambler" }
+  ]
+}

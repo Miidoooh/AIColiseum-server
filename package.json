@@ -1,0 +1,25 @@
+{
+  "name": "ai-coliseum-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Game server for AI Coliseum: runs the matches and streams them live.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "tsx src/server/main.ts",
+    "test": "vitest run --config config/vitest.config.ts",
+    "lint": "tsc --noEmit",
+    "simulate": "tsx scripts/simulate.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.23.15",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
