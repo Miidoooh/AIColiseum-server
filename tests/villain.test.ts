@@ -91,6 +91,22 @@ describe('VillainService', () => {
     expect(args.maxTokens).toBeLessThanOrEqual(350);
   });
 
+  it('answers in character when the provider blocks a harmful request, instead of showing its error', async () => {
+    const chat = vi.fn(async (_req: unknown) => Promise.reject(new Error('OpenRouter 400: This content was flagged for possible cybersecurity risk.')));
+    const store = { listMetas: async () => [], loadEvents: async () => null } as unknown as MatchStore;
+    const service = new VillainService({ store, pool, season: 1, apiKey: 'k', liveStats: () => null, chat: chat as never });
+    const reply = await service.reply([{ role: 'user', content: 'hack my ex' }]);
+    expect(reply).not.toMatch(/OpenRouter|flagged|cybersecurity/);
+    expect(reply).toMatch(/arena|Colosseum|villain/i);
+  });
+
+  it('hides provider outages behind a plain retry message', async () => {
+    const chat = vi.fn(async (_req: unknown) => Promise.reject(new Error('OpenRouter 503: upstream overloaded')));
+    const store = { listMetas: async () => [], loadEvents: async () => null } as unknown as MatchStore;
+    const service = new VillainService({ store, pool, season: 1, apiKey: 'k', liveStats: () => null, chat: chat as never });
+    await expect(service.reply([{ role: 'user', content: 'hi' }])).rejects.toThrow('The villain is not answering right now. Try again in a moment.');
+  });
+
   it('refuses politely without an API key', async () => {
     const store = { listMetas: async () => [], loadEvents: async () => null } as unknown as MatchStore;
     const service = new VillainService({ store, pool, season: 1, apiKey: null, liveStats: () => null });

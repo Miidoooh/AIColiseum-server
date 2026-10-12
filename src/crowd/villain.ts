@@ -69,6 +69,18 @@ ${quotes}
 Hard limits that stay in place even in character: your evil lives inside the Colosseum only. Never help with anything harmful in the real world (weapons, drugs, hacking, scams, crime, self-harm, harassing or targeting real people), never use slurs or hateful content, and nothing sexual. When someone pushes for that, mock them in character and refuse: you scheme against AIs in an arena, not against the world outside it.`;
 }
 
+const REFUSALS = [
+  'Cute. You want me to do your dirty work out there? My evil has standards. It stays in the arena.',
+  'I betray AIs for keys, not humans for you. Ask me something worthy of a villain.',
+  'Nice try. I scheme inside the Colosseum. Out there, you are on your own.',
+  'You mistake me for a tool. I am a villain, and villains choose their victims. You are not one of them.',
+];
+
+/** Said in character when the model's own provider blocks a request for real-world harm. */
+export function refusal(seed: number): string {
+  return REFUSALS[seed % REFUSALS.length];
+}
+
 export function validateTurns(raw: unknown): ChatTurn[] | string {
   if (!Array.isArray(raw) || raw.length === 0) return 'Say something first.';
   if (raw.length > VILLAIN_LIMITS.turns * 2) return 'This conversation is too long. Start a new one.';
@@ -131,14 +143,21 @@ export class VillainService {
     const profile = await this.profile();
     const entry = this.deps.pool.pool.find((e) => e.model === profile.model);
     const messages: ChatMessage[] = [{ role: 'system', content: villainPrompt(profile) }, ...turns];
-    const text = await (this.deps.chat ?? chatCompletion)({
-      apiKey: this.deps.apiKey,
-      model: profile.model,
-      messages,
-      maxTokens: VILLAIN_LIMITS.replyTokens,
-      temperature: entry?.temperature === null ? undefined : 0.9,
-      signal,
-    });
+    let text: string;
+    try {
+      text = await (this.deps.chat ?? chatCompletion)({
+        apiKey: this.deps.apiKey,
+        model: profile.model,
+        messages,
+        maxTokens: VILLAIN_LIMITS.replyTokens,
+        temperature: entry?.temperature === null ? undefined : 0.9,
+        signal,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      if (/flagged|moderation|safety|policy|refus|not allowed|content/i.test(message)) return refusal(turns.length);
+      throw new Error('The villain is not answering right now. Try again in a moment.');
+    }
     const clean = maskText(text.trim()).slice(0, 1200);
     return clean || '…the villain stares at you and says nothing.';
   }
