@@ -116,6 +116,8 @@ export function buildMeta(events: GameEvent[]): MatchMeta | null {
   if (!start || start.type !== 'match_started' || !end || end.type !== 'match_ended') return null;
   return {
     id: start.matchId,
+    ...(start.season !== undefined ? { season: start.season } : {}),
+    ...(start.number !== undefined ? { number: start.number } : {}),
     mode: start.mode,
     startedAt: start.startedAt,
     endedAt: end.endedAt,

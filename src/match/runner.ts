@@ -18,6 +18,9 @@ export interface RunnerOptions {
   mode: MatchMode;
   tickMs: number;
   agentTimeoutMs: number;
+  season?: number;
+  /** Position of this match within its season, starting at 1. */
+  number?: number;
 }
 
 export interface RunnerDeps {
@@ -87,7 +90,12 @@ export async function runMatch(entrants: Entrant[], opts: RunnerOptions, deps: R
     return emitting;
   };
 
-  await emit(openingEvents(state, deps.now()));
+  const opening = openingEvents(state, deps.now());
+  if (opening[0]?.type === 'match_started') {
+    opening[0].season = opts.season ?? 1;
+    opening[0].number = opts.number ?? 1;
+  }
+  await emit(opening);
   deps.log?.(`match ${opts.matchId} started (${opts.mode}): ${identities.map((i) => `${i.name}=${i.modelLabel}`).join(', ')}`);
 
   while (!state.ended) {

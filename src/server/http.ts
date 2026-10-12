@@ -1,17 +1,19 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { rulesCard } from '../agents/prompt';
-import type { RosterEntry } from '../agents/roster';
+import { publicEntry, type ModelPool } from '../agents/roster';
 import { MATCH_ID, type MatchStore } from '../match/store';
 import { ZONE_INFO } from '../shared/arena';
 import { RULES, buildSchedule, releaseTicks } from '../shared/rules';
 import { buildLeaderboard } from '../stats/leaderboard';
+import { summarizeSeason } from '../stats/season';
 import type { LiveHub } from './hub';
 import { serveStatic } from './static';
 
 export interface HttpDeps {
   store: MatchStore;
   hub: LiveHub;
-  roster: RosterEntry[];
+  pool: ModelPool;
+  season: number;
   clientDir: string;
   tickMs: number;
   corsOrigin: string;
@@ -27,7 +29,7 @@ function json(res: ServerResponse, body: unknown, status = 200): void {
   res.end(JSON.stringify(body));
 }
 
-function rulesPayload(tickMs: number, roster: RosterEntry[]) {
+function rulesPayload(tickMs: number, pool: ModelPool) {
   const schedule = buildSchedule();
   const config = {
     maxTicks: RULES.maxTicks,
@@ -39,16 +41,17 @@ function rulesPayload(tickMs: number, roster: RosterEntry[]) {
     maxHp: RULES.maxHp,
   };
   return {
-    prompt: rulesCard('{NAME}', roster.length, config),
+    prompt: rulesCard('{NAME}', pool.perMatch, config),
     schedule: schedule.filter((e) => e.kind !== 'dawn'),
     rules: RULES,
     zones: ZONE_INFO,
-    roster: roster.map(({ name, color, label, lab }) => ({ name, color, label, lab })),
+    perMatch: pool.perMatch,
+    roster: pool.pool.map(publicEntry),
   };
 }
 
 export function createHandler(deps: HttpDeps) {
-  const rules = rulesPayload(deps.tickMs, deps.roster);
+  const rules = rulesPayload(deps.tickMs, deps.pool);
   return async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     res.setHeader('Access-Control-Allow-Origin', deps.corsOrigin);
     res.setHeader('Vary', 'Origin');
@@ -67,6 +70,11 @@ export function createHandler(deps: HttpDeps) {
       if (path === '/api/live') return deps.hub.attach(req, res);
       if (path === '/api/status') return json(res, deps.hub.status());
       if (path === '/api/rules') return json(res, rules);
+      if (path === '/api/season') {
+        const status = deps.hub.status();
+        const current = status.phase === 'running' ? status.matchNumber : null;
+        return json(res, summarizeSeason(deps.season, deps.pool.perMatch, await realMatches(deps.store), current));
+      }
       if (path === '/api/leaderboard') return json(res, buildLeaderboard(await realMatches(deps.store), deps.hub.liveStats()));
       if (path === '/api/matches') return json(res, (await realMatches(deps.store)).slice(0, 50));
       const match = path.match(/^\/api\/matches\/([^/]+)$/);

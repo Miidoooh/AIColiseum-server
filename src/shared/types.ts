@@ -58,6 +58,9 @@ interface EventBase {
 export interface MatchStartedEvent extends EventBase {
   type: 'match_started';
   matchId: string;
+  /** Absent in recordings made before seasons were numbered. */
+  season?: number;
+  number?: number;
   seed: number;
   startedAt: number;
   mode: MatchMode;
@@ -274,6 +277,8 @@ export interface FighterStats {
 
 export interface MatchMeta {
   id: string;
+  season?: number;
+  number?: number;
   mode: MatchMode;
   startedAt: number;
   endedAt: number;
@@ -305,9 +310,32 @@ export interface LiveStatus {
   /** Why no match is running: paused on purpose, or offline because of a problem such as a missing API key. */
   message: string | null;
   matchId: string | null;
+  season: number | null;
+  matchNumber: number | null;
   mode: MatchMode | null;
   tick: number;
   maxTicks: number;
   fighters: FighterView[];
   nextMatchAt: number | null;
+  /** Announced during the break between matches. */
+  nextLineup: LineupEntry[] | null;
+}
+
+/** A model in the pool, as shown to visitors. */
+export interface LineupEntry {
+  name: string;
+  color: string;
+  model: string;
+  label: string;
+  lab: string;
+}
+
+export interface SeasonSummary {
+  season: number;
+  matchesPlayed: number;
+  currentMatch: number | null;
+  perMatch: number;
+  totals: { rounds: number; betrayals: number; lies: number; knockouts: number; escapes: number; messages: number };
+  /** Matches played so far, by model id. */
+  appearances: Record<string, number>;
 }

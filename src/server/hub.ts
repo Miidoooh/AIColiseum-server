@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { computeMatchStats } from '../stats/match-stats';
-import type { FighterStats, GameEvent, LiveStatus, MatchMode, StateEvent } from '../shared/types';
+import type { FighterStats, GameEvent, LineupEntry, LiveStatus, MatchMode, MatchStartedEvent, StateEvent } from '../shared/types';
 
 /** Fans the current match out to every connected viewer over Server-Sent Events. */
 export class LiveHub {
@@ -8,6 +8,7 @@ export class LiveHub {
   private events: GameEvent[] = [];
   private phase: LiveStatus['phase'] = 'starting';
   private nextMatchAt: number | null = null;
+  private nextLineup: LineupEntry[] | null = null;
   private message: string | null = null;
   private ended = false;
   private readonly heartbeat: NodeJS.Timeout;
@@ -22,6 +23,7 @@ export class LiveHub {
       this.events = [];
       this.phase = 'running';
       this.nextMatchAt = null;
+      this.nextLineup = null;
       this.ended = false;
     }
     if (e.type === 'match_ended') this.ended = true;
@@ -35,10 +37,11 @@ export class LiveHub {
     this.broadcast(`event: offline\ndata: ${JSON.stringify({ message, phase })}\n\n`);
   }
 
-  intermission(nextMatchAt: number): void {
+  intermission(nextMatchAt: number, nextLineup: LineupEntry[] | null = null): void {
     this.phase = 'intermission';
     this.nextMatchAt = nextMatchAt;
-    this.broadcast(`event: intermission\ndata: ${JSON.stringify({ nextMatchAt })}\n\n`);
+    this.nextLineup = nextLineup;
+    this.broadcast(`event: intermission\ndata: ${JSON.stringify({ nextMatchAt, nextLineup })}\n\n`);
   }
 
   attach(req: IncomingMessage, res: ServerResponse): void {
@@ -48,23 +51,27 @@ export class LiveHub {
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
-    res.write(`retry: 3000\nevent: hello\ndata: ${JSON.stringify({ events: this.events, phase: this.phase, nextMatchAt: this.nextMatchAt, message: this.message })}\n\n`);
+    const hello = { events: this.events, phase: this.phase, nextMatchAt: this.nextMatchAt, nextLineup: this.nextLineup, message: this.message };
+    res.write(`retry: 3000\nevent: hello\ndata: ${JSON.stringify(hello)}\n\n`);
     this.clients.add(res);
     req.on('close', () => this.clients.delete(res));
   }
 
   status(): LiveStatus {
-    const start = this.events.find((e) => e.type === 'match_started');
+    const start = this.events.find((e): e is MatchStartedEvent => e.type === 'match_started');
     const last = [...this.events].reverse().find((e): e is StateEvent => e.type === 'state');
     return {
       phase: this.phase,
       message: this.message,
-      matchId: start?.type === 'match_started' ? start.matchId : null,
-      mode: start?.type === 'match_started' ? (start.mode as MatchMode) : null,
+      matchId: start?.matchId ?? null,
+      season: start?.season ?? null,
+      matchNumber: start?.number ?? null,
+      mode: (start?.mode as MatchMode | undefined) ?? null,
       tick: last?.tick ?? 0,
-      maxTicks: start?.type === 'match_started' ? start.config.maxTicks : 0,
+      maxTicks: start?.config.maxTicks ?? 0,
       fighters: last?.fighters ?? [],
       nextMatchAt: this.nextMatchAt,
+      nextLineup: this.nextLineup,
     };
   }
 
