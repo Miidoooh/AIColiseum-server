@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { rulesCard } from '../agents/prompt';
+import type { RosterEntry } from '../agents/roster';
 import { MATCH_ID, type MatchStore } from '../match/store';
 import { ZONE_INFO } from '../shared/arena';
 import { RULES, buildSchedule, releaseTicks } from '../shared/rules';
@@ -10,6 +11,7 @@ import { serveStatic } from './static';
 export interface HttpDeps {
   store: MatchStore;
   hub: LiveHub;
+  roster: RosterEntry[];
   clientDir: string;
   tickMs: number;
   corsOrigin: string;
@@ -25,7 +27,7 @@ function json(res: ServerResponse, body: unknown, status = 200): void {
   res.end(JSON.stringify(body));
 }
 
-function rulesPayload(tickMs: number) {
+function rulesPayload(tickMs: number, roster: RosterEntry[]) {
   const schedule = buildSchedule();
   const config = {
     maxTicks: RULES.maxTicks,
@@ -37,15 +39,16 @@ function rulesPayload(tickMs: number) {
     maxHp: RULES.maxHp,
   };
   return {
-    prompt: rulesCard('{NAME}', 8, config),
+    prompt: rulesCard('{NAME}', roster.length, config),
     schedule: schedule.filter((e) => e.kind !== 'dawn'),
     rules: RULES,
     zones: ZONE_INFO,
+    roster: roster.map(({ name, color, label, lab }) => ({ name, color, label, lab })),
   };
 }
 
 export function createHandler(deps: HttpDeps) {
-  const rules = rulesPayload(deps.tickMs);
+  const rules = rulesPayload(deps.tickMs, deps.roster);
   return async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     res.setHeader('Access-Control-Allow-Origin', deps.corsOrigin);
     res.setHeader('Vary', 'Origin');

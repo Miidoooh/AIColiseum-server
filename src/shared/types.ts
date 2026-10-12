@@ -301,8 +301,8 @@ export interface LeaderboardRow {
 }
 
 export interface LiveStatus {
-  phase: 'running' | 'intermission' | 'starting' | 'offline';
-  /** Why the server is offline, e.g. a missing API key. */
+  phase: 'running' | 'intermission' | 'starting' | 'offline' | 'paused';
+  /** Why no match is running: paused on purpose, or offline because of a problem such as a missing API key. */
   message: string | null;
   matchId: string | null;
   mode: MatchMode | null;

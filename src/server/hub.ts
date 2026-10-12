@@ -29,10 +29,10 @@ export class LiveHub {
     this.broadcast(`data: ${JSON.stringify(e)}\n\n`);
   }
 
-  offline(message: string): void {
-    this.phase = 'offline';
+  offline(message: string, phase: 'offline' | 'paused' = 'offline'): void {
+    this.phase = phase;
     this.message = message;
-    this.broadcast(`event: offline\ndata: ${JSON.stringify({ message })}\n\n`);
+    this.broadcast(`event: offline\ndata: ${JSON.stringify({ message, phase })}\n\n`);
   }
 
   intermission(nextMatchAt: number): void {

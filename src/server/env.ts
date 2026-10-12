@@ -11,6 +11,7 @@ export interface ServerConfig {
   maxTokens: number;
   temperature: number;
   rosterPath: string;
+  liveSwitchPath: string;
   dataDir: string;
   clientDir: string;
   corsOrigin: string;
@@ -36,6 +37,7 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
     maxTokens: int(env.LLM_MAX_TOKENS, 4000, 64, 32_000),
     temperature: Number.isFinite(temperature) && env.LLM_TEMPERATURE !== '' ? Math.min(2, Math.max(0, temperature)) : 0.8,
     rosterPath: resolve(cwd, env.ROSTER_PATH || 'config/roster.json'),
+    liveSwitchPath: resolve(cwd, 'config/live.json'),
     dataDir: resolve(cwd, env.DATA_DIR || 'data/matches'),
     clientDir: resolve(cwd, 'dist/client'),
     corsOrigin: env.CORS_ORIGIN?.trim() || '*',
