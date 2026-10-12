@@ -46,15 +46,20 @@ async function decide(agent: Agent, obs: Parameters<Agent['decide']>[0], timeout
 /** Plays one full match: every active fighter decides in parallel each tick, then the engine resolves. */
 export async function runMatch(entrants: Entrant[], opts: RunnerOptions, deps: RunnerDeps): Promise<GameEvent[]> {
   const rng = new Rng(opts.seed);
-  const personas = rng.shuffle([...PERSONAS]).slice(0, entrants.length);
-  const identities = entrants.map((e, i) => ({
-    id: personas[i].name.toLowerCase(),
-    name: personas[i].name,
-    color: personas[i].color,
-    model: e.model,
-    modelLabel: e.modelLabel,
-    lab: e.lab,
-  }));
+  const taken = new Set(entrants.flatMap((e) => (e.name ? [e.name.toLowerCase()] : [])));
+  const personas = rng.shuffle(PERSONAS.filter((p) => !taken.has(p.name.toLowerCase())));
+  let nextPersona = 0;
+  const identities = entrants.map((e) => {
+    const persona = e.name ? { name: e.name, color: e.color ?? '#c9ced6' } : personas[nextPersona++];
+    return {
+      id: persona.name.toLowerCase(),
+      name: persona.name,
+      color: e.color ?? persona.color,
+      model: e.model,
+      modelLabel: e.modelLabel,
+      lab: e.lab,
+    };
+  });
   const state = createMatchState({
     matchId: opts.matchId,
     seed: rng.int(2 ** 31),

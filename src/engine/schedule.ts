@@ -117,7 +117,7 @@ function applyEntry(ctx: TickContext, entry: ScheduleEntry): void {
     }
     case 'blackout': {
       state.blackoutUntil = ctx.tick + (entry.duration ?? 3);
-      warden(ctx, 'blackout', `Blackout. The Warden is blind in every zone until tick ${state.blackoutUntil}. Nothing it cannot see is penalized.`);
+      warden(ctx, 'blackout', `Blackout. The Warden is blind in every zone until round ${state.blackoutUntil}. Nothing it cannot see is penalized.`);
       return;
     }
     case 'bounty': {

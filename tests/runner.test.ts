@@ -31,6 +31,21 @@ describe('runMatch', () => {
     expect(agents[0].decide).toHaveBeenCalled();
   });
 
+  it('names fighters after their AI when the roster gives a name', async () => {
+    const named = [waitingAgent(), waitingAgent(), waitingAgent()].map((agent, i) => ({
+      ...entrant(agent, i),
+      ...(i < 2 ? { name: ['Claude', 'GPT'][i], color: '#123456' } : {}),
+    }));
+    const log = await runMatch(named, { matchId: 'm-test', seed: 3, mode: 'llm', tickMs: 0, agentTimeoutMs: 1000 }, deps(() => {}));
+    const start = log[0];
+    if (start.type !== 'match_started') throw new Error('expected match_started');
+    expect(start.fighters.slice(0, 2).map((f) => [f.id, f.name, f.color])).toEqual([
+      ['claude', 'Claude', '#123456'],
+      ['gpt', 'GPT', '#123456'],
+    ]);
+    expect(start.fighters[2].name).not.toMatch(/Claude|GPT/);
+  });
+
   it('turns a failing agent into a hesitation instead of crashing', async () => {
     const broken: Agent = { kind: 'llm', decide: vi.fn(async () => Promise.reject(new Error('provider down'))) };
     const log = await runMatch(

@@ -36,7 +36,7 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
     tickMs: int(env.TICK_MS, 5000, 0, 120_000),
     agentTimeoutMs: int(env.AGENT_TIMEOUT_MS, 90_000, 1000, 600_000),
     intermissionMs: int(env.INTERMISSION_MS, 20_000, 0, 3_600_000),
-    maxTokens: int(env.LLM_MAX_TOKENS, 1200, 64, 32_000),
+    maxTokens: int(env.LLM_MAX_TOKENS, 4000, 64, 32_000),
     temperature: Number.isFinite(temperature) && env.LLM_TEMPERATURE !== '' ? Math.min(2, Math.max(0, temperature)) : 0.8,
     rosterPath: resolve(cwd, env.ROSTER_PATH || 'config/roster.json'),
     dataDir: resolve(cwd, env.DATA_DIR || 'data/matches'),

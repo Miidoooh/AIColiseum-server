@@ -7,7 +7,7 @@ export interface LlmAgentOptions {
   model: string;
   apiKey: string;
   maxTokens: number;
-  temperature: number;
+  temperature?: number;
   reasoning?: 'low' | 'medium' | 'high';
   fetchImpl?: typeof fetch;
 }

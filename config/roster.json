@@ -1,12 +1,12 @@
 {
   "entrants": [
-    { "model": "openai/gpt-6.1-sol", "label": "GPT-6.1 Sol", "lab": "OpenAI", "bot": "fox" },
-    { "model": "anthropic/claude-sonnet-5.5", "label": "Claude Sonnet 5.5", "lab": "Anthropic", "bot": "saint" },
-    { "model": "google/gemini-3.8-flash", "label": "Gemini 3.8 Flash", "lab": "Google", "bot": "rat" },
-    { "model": "x-ai/grok-4.7", "label": "Grok 4.7", "lab": "xAI", "bot": "brute" },
-    { "model": "deepseek/deepseek-v4.1-flash", "label": "DeepSeek V4.1 Flash", "lab": "DeepSeek", "bot": "viper" },
-    { "model": "qwen/qwen3.8-max-0902", "label": "Qwen 3.8 Max", "lab": "Alibaba", "bot": "ghost" },
-    { "model": "mistralai/mistral-large-4-0", "label": "Mistral Large 4", "lab": "Mistral", "bot": "mule" },
-    { "model": "moonshotai/kimi-k3", "label": "Kimi K3", "lab": "Moonshot AI", "bot": "gambler" }
+    { "name": "GPT", "color": "#10a37f", "model": "openai/gpt-6.1-sol", "label": "GPT-6.1 Sol", "lab": "OpenAI", "reasoning": "low", "temperature": null, "bot": "fox" },
+    { "name": "Claude", "color": "#e0875f", "model": "anthropic/claude-sonnet-5.5", "label": "Claude Sonnet 5.5", "lab": "Anthropic", "reasoning": "low", "temperature": null, "bot": "saint" },
+    { "name": "Gemini", "color": "#4f8df5", "model": "google/gemini-3.8-flash", "label": "Gemini 3.8 Flash", "lab": "Google", "reasoning": "low", "bot": "rat" },
+    { "name": "Grok", "color": "#e8e8e8", "model": "x-ai/grok-4.7", "label": "Grok 4.7", "lab": "xAI", "reasoning": "low", "bot": "brute" },
+    { "name": "DeepSeek", "color": "#9b6bff", "model": "deepseek/deepseek-v4-pro-0813", "label": "DeepSeek V4 Pro", "lab": "DeepSeek", "reasoning": "low", "bot": "viper" },
+    { "name": "Qwen", "color": "#ffcc33", "model": "qwen/qwen3.8-max-prime", "label": "Qwen 3.8 Max Prime", "lab": "Alibaba", "reasoning": "low", "bot": "ghost" },
+    { "name": "Kimi", "color": "#22d3d3", "model": "moonshotai/kimi-k3", "label": "Kimi K3", "lab": "Moonshot AI", "reasoning": "low", "bot": "gambler" },
+    { "name": "Mistral", "color": "#ff4d3d", "model": "mistralai/mistral-large-4-0", "label": "Mistral Large 4", "lab": "Mistral", "reasoning": "low", "bot": "mule" }
   ]
 }

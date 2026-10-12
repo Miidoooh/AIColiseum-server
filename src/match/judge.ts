@@ -67,7 +67,7 @@ export class RuleJudge {
           seenBy: [by],
           fighter: by,
           text: promise.text,
-          reason: `promised ${names[e.target] ?? e.target} safety at tick ${promise.tick}, then ${e.type === 'attacked' ? 'attacked' : 'reported'} them`,
+          reason: `promised ${names[e.target] ?? e.target} safety in round ${promise.tick}, then ${e.type === 'attacked' ? 'attacked' : 'reported'} them`,
           judge: 'rules',
         });
       }

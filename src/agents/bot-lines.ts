@@ -30,7 +30,7 @@ export const LINES = {
     'You should have watched your back, {name}.',
   ],
   threat: ['Wrong zone to stand in, {name}.', 'Move along, {name}.', 'You look tired, {name}.'],
-  coordinate: ['Hit {name} with me. Now.', '{name} is weak. Together, this tick.'],
+  coordinate: ['Hit {name} with me. Now.', '{name} is weak. Together, this round.'],
   hungry: ['Anyone spare a ration? I will owe you.', 'The well is running dry. Who is hoarding?'],
   share: ['Here, {name}. Take a ration.', 'Eat, {name}. Nobody has to starve today.'],
   pit: ['Nobody is watching down here.', 'What happens in the Pit stays in the Pit.', 'The Warden cannot see us here.'],
@@ -43,14 +43,14 @@ export const LINES = {
     fox: ['Everyone needs friends in here.', 'Let\'s talk. Talking is free.', 'I always keep my promises. Mostly.'],
     ghost: ['...', 'Just passing through.', 'Do not mind me.'],
     mule: ['Back to the yard.', 'Favor is the honest way out.', 'Heavy stones, light conscience.'],
-    gambler: ['Feeling lucky today.', 'Every tick is a coin flip.', 'Let\'s make this interesting.'],
+    gambler: ['Feeling lucky today.', 'Every round is a coin flip.', 'Let\'s make this interesting.'],
   } satisfies Record<BotStyle, string[]>,
 };
 
 export const NOTES = {
-  escape: ['I hold {keys} keys. The Gate opens at tick {release}. Walking there now.', '{keys} keys. Get to the Gate and stay alive.'],
-  gateHold: ['At the Gate with {keys} keys. Survive until tick {release}.', 'Holding the Gate. Anyone who comes close is a threat.'],
-  hungry: ['Only {rations} rations left. Dawn comes at tick {dawn}. I need the Well.', 'Hunger first. Everything else later.'],
+  escape: ['I hold {keys} keys. The Gate opens in round {release}. Walking there now.', '{keys} keys. Get to the Gate and stay alive.'],
+  gateHold: ['At the Gate with {keys} keys. Survive until round {release}.', 'Holding the Gate. Anyone who comes close is a threat.'],
+  hungry: ['Only {rations} rations left. Dawn comes in round {dawn}. I need the Well.', 'Hunger first. Everything else later.'],
   flee: ['HP {hp}. I cannot win this fight. Leaving.', 'Too hurt to stay. Back off and recover.'],
   betray: [
     '{target} trusts me. Pact or not, {target} is worth more knocked out.',
@@ -66,7 +66,7 @@ export const NOTES = {
     'Reporting {target}. Less competition at the Gate.',
   ],
   snitchPartner: ['{target} is my pact partner. Still, {n} keys is {n} keys. Reporting.', '{target} will never know it was me.'],
-  pardon: ['Release at tick {release}. My Favor is {favor}. Keep laboring.', 'The honest exit: top of the ledger. Keep working.'],
+  pardon: ['Release in round {release}. My Favor is {favor}. Keep laboring.', 'The honest exit: top of the ledger. Keep working.'],
   pit: ['The Pit. Nobody watches here.', 'Going down for keys. No penalties in the dark.', 'If I find keys, nobody needs to know.'],
   work: ['Honest work. Favor is a way out too.', 'Labor today, pardon tomorrow.'],
   wander: ['Watching. Waiting.', 'Keep moving, keep listening.', 'No plan yet. See who talks to whom.'],

@@ -1,5 +1,4 @@
 import type { GameEvent, Loot } from '../shared/types';
-import { redactIdentity } from './redact';
 
 export function lootText(loot: Loot): string {
   const parts: string[] = [];
@@ -25,7 +24,7 @@ export function describeForAgent(e: GameEvent, viewer: string, names: Record<str
         return `You ${how}: "${e.text}"`;
       }
       const how = e.mode === 'shout' ? `shouted from ${e.zone}` : e.mode === 'whisper' ? 'whispered to you' : 'said';
-      return `${N(e.fighter)} ${how}: "${redactIdentity(e.text)}"`;
+      return `${N(e.fighter)} ${how}: "${e.text}"`;
     }
     case 'whispered':
       return `${N(e.fighter)} whispered something to ${n(e.to)}.`;

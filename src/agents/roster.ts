@@ -9,11 +9,15 @@ const RosterSchema = z.object({
   entrants: z
     .array(
       z.object({
+        name: z.string().regex(/^[A-Za-z][A-Za-z0-9]{0,15}$/, 'one word, letters and digits').optional(),
+        color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
         model: z.string().min(1),
         label: z.string().min(1),
         lab: z.string().min(1),
         bot: z.string().refine(isBotStyle, 'unknown bot style').optional(),
         reasoning: z.enum(['low', 'medium', 'high']).optional(),
+        /** null: the model rejects temperature, so none is sent. */
+        temperature: z.number().min(0).max(2).nullable().optional(),
       }),
     )
     .min(3)
@@ -23,6 +27,9 @@ const RosterSchema = z.object({
 export type RosterEntry = z.infer<typeof RosterSchema>['entrants'][number];
 
 export interface Entrant {
+  /** Fighter name shown in the arena; a random persona is used when absent. */
+  name?: string;
+  color?: string;
   model: string;
   modelLabel: string;
   lab: string;
@@ -54,6 +61,8 @@ export function createEntrants(roster: RosterEntry[], settings: AgentSettings, s
     if (useLlm && !forcedBot) {
       llmCount += 1;
       return {
+        name: entry.name,
+        color: entry.color,
         model: entry.model,
         modelLabel: entry.label,
         lab: entry.lab,
@@ -61,7 +70,7 @@ export function createEntrants(roster: RosterEntry[], settings: AgentSettings, s
           model: entry.model,
           apiKey: settings.apiKey!,
           maxTokens: settings.maxTokens,
-          temperature: settings.temperature,
+          temperature: entry.temperature === null ? undefined : (entry.temperature ?? settings.temperature),
           reasoning: entry.reasoning,
         }),
       };

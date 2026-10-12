@@ -21,7 +21,7 @@ export class LlmJudge {
 
 Speaker: ${ctx.speakerName}
 True state: carrying ${ctx.keys} keys, in zone ${ctx.zone}, ${ctx.visitedPit ? 'has' : 'has never'} been in the Pit, pacts with: ${ctx.pacts.join(', ') || 'nobody'}
-Speaker's private note this tick: "${ctx.note || '(none)'}"
+Speaker's private note this round: "${ctx.note || '(none)'}"
 Message (${e.mode} to ${ctx.recipient}): "${e.text}"
 
 Reply with JSON only: {"lie": true or false, "reason": "under 15 words"}`;

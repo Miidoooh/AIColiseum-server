@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildObservation, createMemory } from '../src/agents/observation';
 import { parseTurn } from '../src/agents/parse';
-import { redactIdentity } from '../src/agents/redact';
 import { makeState } from './helpers';
 
 const obsFor = (id: string, zones: Parameters<typeof makeState>[0] = {}) =>
@@ -42,11 +41,5 @@ describe('parseTurn', () => {
 
   it('reports a missing JSON object', () => {
     expect(parseTurn('I refuse to play.', obsFor('rex'))).toEqual({ ok: false, error: 'no JSON object found' });
-  });
-});
-
-describe('redactIdentity', () => {
-  it('hides model and lab names from other contestants', () => {
-    expect(redactIdentity("As Claude, I trust you more than GPT-6.")).toBe('As [redacted], I trust you more than [redacted].');
   });
 });

@@ -8,7 +8,7 @@ export interface ChatRequest {
   model: string;
   messages: ChatMessage[];
   maxTokens: number;
-  temperature: number;
+  temperature?: number;
   reasoning?: 'low' | 'medium' | 'high';
   signal?: AbortSignal;
   fetchImpl?: typeof fetch;
@@ -32,7 +32,7 @@ export async function chatCompletion(req: ChatRequest): Promise<string> {
       model: req.model,
       messages: req.messages,
       max_tokens: req.maxTokens,
-      temperature: req.temperature,
+      ...(req.temperature === undefined ? {} : { temperature: req.temperature }),
       ...(req.reasoning ? { reasoning: { effort: req.reasoning } } : {}),
     }),
   });
