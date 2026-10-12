@@ -27,7 +27,8 @@ server.listen(config.port, () => {
   const labs = new Set(pool.pool.map((e) => e.lab)).size;
   console.log(`\n  AI Colosseum running on http://localhost:${config.port} · season ${live.season}`);
   console.log(`  Pool: ${pool.pool.length} models from ${labs} labs, ${pool.perMatch} per match, rotating every match`);
-  console.log(`  Round length at least ${config.tickMs}ms · lie judge: ${llmJudge ? config.judgeModel : 'rules only'}\n`);
+  console.log(`  Round length at least ${config.tickMs}ms · lie judge: ${llmJudge ? config.judgeModel : 'rules only'}`);
+  console.log(`  Archive: ${store.directory}${config.dataPersistent ? '' : '  (WARNING: not on a volume, recordings are lost on every redeploy)'}\n`);
 });
 
 const realMetas = async () => (await store.listMetas()).filter((m) => m.mode !== 'bots');

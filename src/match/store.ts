@@ -14,6 +14,16 @@ export class MatchStore {
 
   constructor(private readonly dir: string) {}
 
+  get directory(): string {
+    return this.dir;
+  }
+
+  /** The match's event log exactly as stored, one JSON event per line. */
+  async loadRaw(id: string): Promise<string | null> {
+    if (!MATCH_ID.test(id)) return null;
+    return readFile(this.path(id, 'jsonl'), 'utf8').catch(() => null);
+  }
+
   async init(): Promise<void> {
     await mkdir(this.dir, { recursive: true });
   }

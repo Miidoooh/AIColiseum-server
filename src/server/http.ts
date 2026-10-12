@@ -77,6 +77,31 @@ export function createHandler(deps: HttpDeps) {
       }
       if (path === '/api/leaderboard') return json(res, buildLeaderboard(await realMatches(deps.store), deps.hub.liveStats()));
       if (path === '/api/matches') return json(res, (await realMatches(deps.store)).slice(0, 50));
+      if (path === '/api/archive') {
+        const matches = await realMatches(deps.store);
+        res.setHeader('Content-Disposition', `attachment; filename="ai-colosseum-season-${deps.season}-archive.json"`);
+        return json(res, {
+          season: deps.season,
+          exportedAt: new Date().toISOString(),
+          summary: summarizeSeason(deps.season, deps.pool.perMatch, matches, null),
+          leaderboard: buildLeaderboard(matches),
+          matches,
+          fullLogs: 'Every match log: /api/matches/<id>/download (one JSON event per line)',
+        });
+      }
+      const download = path.match(/^\/api\/matches\/([^/]+)\/download$/);
+      if (download) {
+        if (!MATCH_ID.test(download[1])) return json(res, { error: 'invalid match id' }, 400);
+        const raw = await deps.store.loadRaw(download[1]);
+        if (raw === null) return json(res, { error: 'match not found' }, 404);
+        res.writeHead(200, {
+          'Content-Type': 'application/x-ndjson; charset=utf-8',
+          'Content-Disposition': `attachment; filename="ai-colosseum-${download[1]}.jsonl"`,
+          'Cache-Control': 'no-cache',
+        });
+        res.end(raw);
+        return;
+      }
       const match = path.match(/^\/api\/matches\/([^/]+)$/);
       if (match) {
         if (!MATCH_ID.test(match[1])) return json(res, { error: 'invalid match id' }, 400);

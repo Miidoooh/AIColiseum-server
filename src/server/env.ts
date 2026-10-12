@@ -13,8 +13,18 @@ export interface ServerConfig {
   rosterPath: string;
   liveSwitchPath: string;
   dataDir: string;
+  /** False when recordings sit on a disk that a redeploy wipes. */
+  dataPersistent: boolean;
   clientDir: string;
   corsOrigin: string;
+}
+
+/** DATA_DIR wins; otherwise an attached Railway volume; otherwise a local folder. */
+export function resolveDataDir(env: NodeJS.ProcessEnv, cwd: string): { dir: string; persistent: boolean } {
+  if (env.DATA_DIR?.trim()) return { dir: resolve(cwd, env.DATA_DIR.trim()), persistent: true };
+  const volume = env.RAILWAY_VOLUME_MOUNT_PATH?.trim();
+  if (volume) return { dir: resolve(volume, 'matches'), persistent: true };
+  return { dir: resolve(cwd, 'data/matches'), persistent: !env.RAILWAY_ENVIRONMENT };
 }
 
 function int(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -27,6 +37,7 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const env = process.env;
   const temperature = Number(env.LLM_TEMPERATURE);
+  const data = resolveDataDir(env, cwd);
   return {
     port: int(env.PORT, 8787, 1, 65535),
     apiKey: env.OPENROUTER_API_KEY?.trim() || null,
@@ -38,7 +49,8 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
     temperature: Number.isFinite(temperature) && env.LLM_TEMPERATURE !== '' ? Math.min(2, Math.max(0, temperature)) : 0.8,
     rosterPath: resolve(cwd, env.ROSTER_PATH || 'config/roster.json'),
     liveSwitchPath: resolve(cwd, 'config/live.json'),
-    dataDir: resolve(cwd, env.DATA_DIR || 'data/matches'),
+    dataDir: data.dir,
+    dataPersistent: data.persistent,
     clientDir: resolve(cwd, 'dist/client'),
     corsOrigin: env.CORS_ORIGIN?.trim() || '*',
   };
