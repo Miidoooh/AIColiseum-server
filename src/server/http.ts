@@ -7,7 +7,10 @@ import { RULES, buildSchedule, releaseTicks } from '../shared/rules';
 import { buildLeaderboard } from '../stats/leaderboard';
 import { summarizeSeason } from '../stats/season';
 import type { LiveHub } from './hub';
+import { HttpError } from './request';
 import { serveStatic } from './static';
+
+export type CrowdHandler = (req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>;
 
 export interface HttpDeps {
   store: MatchStore;
@@ -17,11 +20,17 @@ export interface HttpDeps {
   clientDir: string;
   tickMs: number;
   corsOrigin: string;
+  crowd?: CrowdHandler;
 }
 
 /** Matches played by real models. Older scripted-bot recordings stay on disk but are never shown. */
 async function realMatches(store: MatchStore) {
   return (await store.listMetas()).filter((m) => m.mode !== 'bots');
+}
+
+/** The research leaderboard counts only matches between the house AIs, untouched by gladiators. */
+async function researchMatches(store: MatchStore) {
+  return (await store.listMetas()).filter((m) => m.mode === 'llm');
 }
 
 function json(res: ServerResponse, body: unknown, status = 200): void {
@@ -56,16 +65,18 @@ export function createHandler(deps: HttpDeps) {
     res.setHeader('Access-Control-Allow-Origin', deps.corsOrigin);
     res.setHeader('Vary', 'Origin');
     if (req.method === 'OPTIONS') {
-      res.writeHead(204, { 'Access-Control-Allow-Methods': 'GET, HEAD', 'Access-Control-Allow-Headers': 'Accept, Content-Type' }).end();
+      res.writeHead(204, { 'Access-Control-Allow-Methods': 'GET, HEAD, POST', 'Access-Control-Allow-Headers': 'Accept, Content-Type' }).end();
       return;
     }
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      res.writeHead(405, { Allow: 'GET, HEAD' }).end();
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'POST') {
+      res.writeHead(405, { Allow: 'GET, HEAD, POST' }).end();
       return;
     }
     const url = new URL(req.url ?? '/', 'http://localhost');
     const path = url.pathname;
     try {
+      if (deps.crowd && path.startsWith('/api/') && (await deps.crowd(req, res, path))) return;
+      if (req.method === 'POST') return json(res, { error: 'not found' }, 404);
       if (path === '/health') return json(res, { ok: true });
       if (path === '/api/live') return deps.hub.attach(req, res);
       if (path === '/api/status') return json(res, deps.hub.status());
@@ -75,7 +86,10 @@ export function createHandler(deps: HttpDeps) {
         const current = status.phase === 'running' ? status.matchNumber : null;
         return json(res, summarizeSeason(deps.season, deps.pool.perMatch, await realMatches(deps.store), current));
       }
-      if (path === '/api/leaderboard') return json(res, buildLeaderboard(await realMatches(deps.store), deps.hub.liveStats()));
+      if (path === '/api/leaderboard') {
+        const live = deps.hub.status().mode === 'llm' ? deps.hub.liveStats() : null;
+        return json(res, buildLeaderboard(await researchMatches(deps.store), live));
+      }
       if (path === '/api/matches') return json(res, (await realMatches(deps.store)).slice(0, 50));
       if (path === '/api/archive') {
         const matches = await realMatches(deps.store);
@@ -111,9 +125,13 @@ export function createHandler(deps: HttpDeps) {
       if (path.startsWith('/api/')) return json(res, { error: 'not found' }, 404);
       await serveStatic(res, deps.clientDir, path);
     } catch (err) {
+      if (res.headersSent) return void res.end();
+      if (err instanceof HttpError) return json(res, { error: err.message }, err.status);
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.startsWith('Solana RPC')) return json(res, { error: 'Solana is not answering right now. Try again in a minute.' }, 502);
+      if (req.method === 'POST' && err instanceof Error) return json(res, { error: message }, 400);
       console.error('[http]', err);
-      if (!res.headersSent) json(res, { error: 'internal error' }, 500);
-      else res.end();
+      json(res, { error: 'internal error' }, 500);
     }
   };
 }

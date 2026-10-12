@@ -9,6 +9,8 @@ export interface LlmAgentOptions {
   maxTokens: number;
   temperature?: number;
   reasoning?: 'low' | 'medium' | 'high';
+  /** Character and strategy written by a holder for their gladiator. House AIs have none. */
+  persona?: string;
   fetchImpl?: typeof fetch;
 }
 
@@ -19,8 +21,10 @@ export class LlmAgent implements Agent {
   constructor(private readonly opts: LlmAgentOptions) {}
 
   async decide(obs: Observation, signal: AbortSignal): Promise<AgentDecision> {
+    const rules = rulesCard(obs.self.name, obs.roster.length, obs.config);
+    const system = this.opts.persona ? `${rules}\n\nYOUR CHARACTER (written by the holder who entered you into the Colosseum)\n${this.opts.persona}` : rules;
     const messages: ChatMessage[] = [
-      { role: 'system', content: rulesCard(obs.self.name, obs.roster.length, obs.config) },
+      { role: 'system', content: system },
       { role: 'user', content: renderObservation(obs) },
     ];
     const first = await this.complete(messages, signal);

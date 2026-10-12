@@ -4,7 +4,7 @@ import type { Entrant } from '../agents/roster';
 import type { Decision } from '../engine/actions';
 import { resolveTick } from '../engine/resolve';
 import { Rng } from '../engine/rng';
-import { beginTick, endTick, openingEvents } from '../engine/schedule';
+import { applyPaidEvent, beginTick, endTick, openingEvents, type PaidEvent } from '../engine/schedule';
 import { activeFighters, createMatchState, pactPartners, type MatchState } from '../engine/state';
 import { PERSONAS } from '../shared/rules';
 import type { GameEvent, MatchMode, SaidEvent } from '../shared/types';
@@ -30,6 +30,8 @@ export interface RunnerDeps {
   sleep(ms: number): Promise<void>;
   llmJudge?: LlmJudge | null;
   log?(message: string): void;
+  /** Warden events holders paid for since the last round; applied at the start of the next one. */
+  takePaidEvents?(): PaidEvent[];
 }
 
 async function decide(agent: Agent, obs: Parameters<Agent['decide']>[0], timeoutMs: number): Promise<Decision> {
@@ -101,6 +103,7 @@ export async function runMatch(entrants: Entrant[], opts: RunnerOptions, deps: R
   while (!state.ended) {
     const startedAt = deps.now();
     await emit(beginTick(state, startedAt));
+    for (const paid of deps.takePaidEvents?.() ?? []) await emit(applyPaidEvent(state, paid));
 
     const active = activeFighters(state);
     const facts = new Map<string, SpeakerFacts>(active.map((f) => [f.id, { keys: f.keys, visitedPit: f.visitedPit }]));

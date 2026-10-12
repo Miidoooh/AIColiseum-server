@@ -90,6 +90,40 @@ export function pickLineup(pool: ModelPool, appearances: ReadonlyMap<string, num
   return rng.shuffle(chosen);
 }
 
+export interface GladiatorSeat {
+  id: string;
+  name: string;
+  color: string;
+  model: string;
+  modelLabel: string;
+  owner: string;
+  persona: string;
+  strategy: string;
+}
+
+/** A holder's gladiator: the chosen model, playing the character its owner wrote. */
+export function createGladiatorEntrants(gladiators: GladiatorSeat[], base: RosterEntry[], settings: AgentSettings): Entrant[] {
+  return gladiators.map((g) => {
+    const entry = base.find((e) => e.model === g.model);
+    const persona = [`Personality: ${g.persona}`, g.strategy ? `Strategy: ${g.strategy}` : ''].filter(Boolean).join('\n');
+    return {
+      name: g.name,
+      color: g.color,
+      model: `gladiator:${g.id}`,
+      modelLabel: `${g.name} · ${g.modelLabel}`,
+      lab: `Holder ${g.owner.slice(0, 4)}…${g.owner.slice(-4)}`,
+      agent: new LlmAgent({
+        model: g.model,
+        apiKey: settings.apiKey,
+        maxTokens: settings.maxTokens,
+        temperature: entry?.temperature === null ? undefined : (entry?.temperature ?? settings.temperature),
+        reasoning: entry?.reasoning,
+        persona,
+      }),
+    };
+  });
+}
+
 /** One fresh model-driven agent per lineup slot. */
 export function createEntrants(lineup: RosterEntry[], settings: AgentSettings): Entrant[] {
   return lineup.map((entry) => ({

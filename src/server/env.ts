@@ -12,6 +12,8 @@ export interface ServerConfig {
   temperature: number;
   rosterPath: string;
   liveSwitchPath: string;
+  tokenConfigPath: string;
+  solanaRpcUrl: string;
   dataDir: string;
   /** False when recordings sit on a disk that a redeploy wipes. */
   dataPersistent: boolean;
@@ -49,6 +51,8 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
     temperature: Number.isFinite(temperature) && env.LLM_TEMPERATURE !== '' ? Math.min(2, Math.max(0, temperature)) : 0.8,
     rosterPath: resolve(cwd, env.ROSTER_PATH || 'config/roster.json'),
     liveSwitchPath: resolve(cwd, 'config/live.json'),
+    tokenConfigPath: resolve(cwd, 'config/token.json'),
+    solanaRpcUrl: env.SOLANA_RPC_URL?.trim() || 'https://api.mainnet-beta.solana.com',
     dataDir: data.dir,
     dataPersistent: data.persistent,
     clientDir: resolve(cwd, 'dist/client'),

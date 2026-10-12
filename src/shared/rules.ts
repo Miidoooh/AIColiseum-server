@@ -29,6 +29,8 @@ export const RULES = {
 export interface ScheduleEntry extends ScheduledEventView {
   wellSupply?: number;
   duration?: number;
+  /** Fighter id for a bounty a holder aimed at someone. */
+  target?: string;
 }
 
 const KIND_ORDER: Record<string, number> = {

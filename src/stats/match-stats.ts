@@ -119,6 +119,7 @@ export function buildMeta(events: GameEvent[]): MatchMeta | null {
     ...(start.season !== undefined ? { season: start.season } : {}),
     ...(start.number !== undefined ? { number: start.number } : {}),
     mode: start.mode,
+    paidEvents: events.filter((e) => e.type === 'warden' && !!e.paidBy).length,
     startedAt: start.startedAt,
     endedAt: end.endedAt,
     ticks: end.tick,

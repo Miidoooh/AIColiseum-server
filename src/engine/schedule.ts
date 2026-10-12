@@ -124,7 +124,8 @@ function applyEntry(ctx: TickContext, entry: ScheduleEntry): void {
       const candidates = activeFighters(state);
       if (!candidates.length) return;
       for (const f of state.fighters) f.bounty = false;
-      const target = pickTop(ctx, candidates, (f) => f.keys * 100 + f.favor);
+      const named = entry.target ? candidates.find((f) => f.id === entry.target) : undefined;
+      const target = named ?? pickTop(ctx, candidates, (f) => f.keys * 100 + f.favor);
       target.bounty = true;
       warden(
         ctx,
@@ -137,6 +138,26 @@ function applyEntry(ctx: TickContext, entry: ScheduleEntry): void {
     default:
       return;
   }
+}
+
+export interface PaidEvent {
+  kind: 'blackout' | 'supply_drop' | 'rations_cut' | 'bounty';
+  target?: string;
+  /** Short wallet of the holder who burned tokens for it. */
+  payer: string;
+}
+
+/** A Warden event bought by a holder. It runs the same rules as the schedule and says who paid. */
+export function applyPaidEvent(state: MatchState, paid: PaidEvent): GameEvent[] {
+  const ctx = createContext(state);
+  const labels = { blackout: 'Blackout', supply_drop: 'Supply drop', rations_cut: 'Rations cut', bounty: "Warden's bounty" } as const;
+  applyEntry(ctx, { tick: ctx.tick, kind: paid.kind, label: labels[paid.kind], duration: 3, ...(paid.target ? { target: paid.target } : {}) });
+  for (const e of ctx.events) {
+    if (e.type !== 'warden') continue;
+    e.paidBy = paid.payer;
+    e.text = `${paid.payer} paid the Warden. ${e.text}`;
+  }
+  return finishContext(ctx);
 }
 
 function spawnPitLoot(ctx: TickContext): void {

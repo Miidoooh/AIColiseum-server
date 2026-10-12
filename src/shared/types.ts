@@ -4,7 +4,8 @@ export type Loot = Record<ItemKind, number>;
 export type FighterStatus = 'active' | 'knocked_out' | 'escaped';
 export type SpeechMode = 'say' | 'whisper' | 'shout';
 export type EscapeRoute = 'gate' | 'pardon' | 'last_standing';
-export type MatchMode = 'llm' | 'bots' | 'mixed';
+/** llm: research match. open: Open Arena match with holders' gladiators. */
+export type MatchMode = 'llm' | 'bots' | 'mixed' | 'open';
 /** Which fighters perceive an event. Viewers always see everything. */
 export type Audience = 'all' | string[];
 export type WardenKind =
@@ -79,6 +80,8 @@ export interface WardenEvent extends EventBase {
   kind: WardenKind;
   text: string;
   target?: string;
+  /** Set when a holder burned tokens to trigger it, so the dataset can tell crowd events apart. */
+  paidBy?: string;
 }
 export interface MovedEvent extends EventBase {
   type: 'moved';
@@ -280,6 +283,8 @@ export interface MatchMeta {
   season?: number;
   number?: number;
   mode: MatchMode;
+  /** Warden events that holders paid for during the match. */
+  paidEvents?: number;
   startedAt: number;
   endedAt: number;
   ticks: number;
