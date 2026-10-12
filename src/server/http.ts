@@ -15,6 +15,11 @@ export interface HttpDeps {
   corsOrigin: string;
 }
 
+/** Matches played by real models. Older scripted-bot recordings stay on disk but are never shown. */
+async function realMatches(store: MatchStore) {
+  return (await store.listMetas()).filter((m) => m.mode !== 'bots');
+}
+
 function json(res: ServerResponse, body: unknown, status = 200): void {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
   res.end(JSON.stringify(body));
@@ -59,8 +64,8 @@ export function createHandler(deps: HttpDeps) {
       if (path === '/api/live') return deps.hub.attach(req, res);
       if (path === '/api/status') return json(res, deps.hub.status());
       if (path === '/api/rules') return json(res, rules);
-      if (path === '/api/leaderboard') return json(res, buildLeaderboard(await deps.store.listMetas(), deps.hub.liveStats()));
-      if (path === '/api/matches') return json(res, (await deps.store.listMetas()).slice(0, 50));
+      if (path === '/api/leaderboard') return json(res, buildLeaderboard(await realMatches(deps.store), deps.hub.liveStats()));
+      if (path === '/api/matches') return json(res, (await realMatches(deps.store)).slice(0, 50));
       const match = path.match(/^\/api\/matches\/([^/]+)$/);
       if (match) {
         if (!MATCH_ID.test(match[1])) return json(res, { error: 'invalid match id' }, 400);

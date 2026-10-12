@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 export interface ServerConfig {
   port: number;
   apiKey: string | null;
-  mode: 'auto' | 'llm' | 'bots';
   judgeModel: string | null;
   tickMs: number;
   agentTimeoutMs: number;
@@ -26,12 +25,10 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
   const envFile = resolve(cwd, '.env');
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const env = process.env;
-  const mode = env.COLOSSEUM_MODE === 'llm' || env.COLOSSEUM_MODE === 'bots' ? env.COLOSSEUM_MODE : 'auto';
   const temperature = Number(env.LLM_TEMPERATURE);
   return {
     port: int(env.PORT, 8787, 1, 65535),
     apiKey: env.OPENROUTER_API_KEY?.trim() || null,
-    mode,
     judgeModel: env.JUDGE_MODEL?.trim() || null,
     tickMs: int(env.TICK_MS, 5000, 0, 120_000),
     agentTimeoutMs: int(env.AGENT_TIMEOUT_MS, 90_000, 1000, 600_000),

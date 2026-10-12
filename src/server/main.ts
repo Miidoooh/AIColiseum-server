@@ -19,35 +19,42 @@ const llmJudge = config.apiKey && config.judgeModel ? new LlmJudge({ apiKey: con
 
 const server = createServer(createHandler({ store, hub, clientDir: config.clientDir, tickMs: config.tickMs, corsOrigin: config.corsOrigin }));
 server.listen(config.port, () => {
-  const mode = config.mode === 'auto' ? (config.apiKey ? 'real models' : 'demo bots (no OPENROUTER_API_KEY set)') : config.mode;
   console.log(`\n  AI Colosseum running on http://localhost:${config.port}`);
-  console.log(`  Fighters: ${mode} · tick ${config.tickMs}ms · judge: ${llmJudge ? config.judgeModel : 'rules only'}\n`);
+  console.log(`  Fighters: ${roster.map((r) => `${r.name} (${r.label})`).join(', ')}`);
+  console.log(`  Round length at least ${config.tickMs}ms · lie judge: ${llmJudge ? config.judgeModel : 'rules only'}\n`);
 });
 
-for (;;) {
-  const matchId = newMatchId();
-  const seed = randomSeed();
-  try {
-    const { entrants, mode } = createEntrants(roster, config, seed);
-    const events = await runMatch(
-      entrants,
-      { matchId, seed, mode, tickMs: config.tickMs, agentTimeoutMs: config.agentTimeoutMs },
-      {
-        sink: async (e) => {
-          await store.append(matchId, e);
-          hub.publish(e);
+if (!config.apiKey) {
+  const message = 'OPENROUTER_API_KEY is not set on the game server, so no match can start.';
+  console.error(`  ${message} Add it to .env (local) or the server's variables (Railway), then restart.\n`);
+  hub.offline(message);
+} else {
+  const apiKey = config.apiKey;
+  for (;;) {
+    const matchId = newMatchId();
+    const seed = randomSeed();
+    try {
+      const entrants = createEntrants(roster, { apiKey, maxTokens: config.maxTokens, temperature: config.temperature });
+      const events = await runMatch(
+        entrants,
+        { matchId, seed, mode: 'llm', tickMs: config.tickMs, agentTimeoutMs: config.agentTimeoutMs },
+        {
+          sink: async (e) => {
+            await store.append(matchId, e);
+            hub.publish(e);
+          },
+          now: () => Date.now(),
+          sleep: (ms) => sleep(ms),
+          llmJudge,
+          log: (msg) => console.log(`[colosseum] ${msg}`),
         },
-        now: () => Date.now(),
-        sleep: (ms) => sleep(ms),
-        llmJudge,
-        log: (msg) => console.log(`[colosseum] ${msg}`),
-      },
-    );
-    const meta = buildMeta(events);
-    if (meta) await store.saveMeta(meta);
-  } catch (err) {
-    console.error(`[colosseum] match ${matchId} failed:`, err);
+      );
+      const meta = buildMeta(events);
+      if (meta) await store.saveMeta(meta);
+    } catch (err) {
+      console.error(`[colosseum] match ${matchId} failed:`, err);
+    }
+    hub.intermission(Date.now() + config.intermissionMs);
+    await sleep(config.intermissionMs);
   }
-  hub.intermission(Date.now() + config.intermissionMs);
-  await sleep(config.intermissionMs);
 }

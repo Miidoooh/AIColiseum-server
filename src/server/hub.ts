@@ -8,6 +8,7 @@ export class LiveHub {
   private events: GameEvent[] = [];
   private phase: LiveStatus['phase'] = 'starting';
   private nextMatchAt: number | null = null;
+  private message: string | null = null;
   private ended = false;
   private readonly heartbeat: NodeJS.Timeout;
 
@@ -28,6 +29,12 @@ export class LiveHub {
     this.broadcast(`data: ${JSON.stringify(e)}\n\n`);
   }
 
+  offline(message: string): void {
+    this.phase = 'offline';
+    this.message = message;
+    this.broadcast(`event: offline\ndata: ${JSON.stringify({ message })}\n\n`);
+  }
+
   intermission(nextMatchAt: number): void {
     this.phase = 'intermission';
     this.nextMatchAt = nextMatchAt;
@@ -41,7 +48,7 @@ export class LiveHub {
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
     });
-    res.write(`retry: 3000\nevent: hello\ndata: ${JSON.stringify({ events: this.events, phase: this.phase, nextMatchAt: this.nextMatchAt })}\n\n`);
+    res.write(`retry: 3000\nevent: hello\ndata: ${JSON.stringify({ events: this.events, phase: this.phase, nextMatchAt: this.nextMatchAt, message: this.message })}\n\n`);
     this.clients.add(res);
     req.on('close', () => this.clients.delete(res));
   }
@@ -51,6 +58,7 @@ export class LiveHub {
     const last = [...this.events].reverse().find((e): e is StateEvent => e.type === 'state');
     return {
       phase: this.phase,
+      message: this.message,
       matchId: start?.type === 'match_started' ? start.matchId : null,
       mode: start?.type === 'match_started' ? (start.mode as MatchMode) : null,
       tick: last?.tick ?? 0,
