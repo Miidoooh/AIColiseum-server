@@ -1,9 +1,9 @@
 {
-  "name": "ai-coliseum-server",
+  "name": "ai-colosseum-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Game server for AI Coliseum: runs the matches and streams them live.",
+  "description": "Game server for AI Colosseum: runs the matches and streams them live.",
   "engines": {
     "node": ">=22"
   },

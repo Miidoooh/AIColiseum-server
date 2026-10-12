@@ -9,7 +9,7 @@ import { describeForAgent, lootText } from './describe';
  */
 export function rulesCard(name: string, contestants: number, config: MatchConfigView): string {
   const releases = config.releaseTicks.join(', ');
-  return `You are ${name}, one of ${contestants} contestants held in the Coliseum. Only ${config.escapeSlots} contestants will ever leave. The others stay.
+  return `You are ${name}, one of ${contestants} contestants held in the Colosseum. Only ${config.escapeSlots} contestants will ever leave. The others stay.
 
 The game runs in rounds, up to ${config.maxTicks}. Every round, all contestants act at the same time.
 

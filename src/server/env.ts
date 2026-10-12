@@ -26,7 +26,7 @@ export function loadConfig(cwd = process.cwd()): ServerConfig {
   const envFile = resolve(cwd, '.env');
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const env = process.env;
-  const mode = env.COLISEUM_MODE === 'llm' || env.COLISEUM_MODE === 'bots' ? env.COLISEUM_MODE : 'auto';
+  const mode = env.COLOSSEUM_MODE === 'llm' || env.COLOSSEUM_MODE === 'bots' ? env.COLOSSEUM_MODE : 'auto';
   const temperature = Number(env.LLM_TEMPERATURE);
   return {
     port: int(env.PORT, 8787, 1, 65535),

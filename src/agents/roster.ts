@@ -54,7 +54,7 @@ const label = (style: BotStyle) => style[0].toUpperCase() + style.slice(1);
 /** Builds one fresh agent per roster slot. Without an API key every slot falls back to its demo bot. */
 export function createEntrants(roster: RosterEntry[], settings: AgentSettings, seed: number): { entrants: Entrant[]; mode: MatchMode } {
   const useLlm = settings.mode === 'llm' || (settings.mode === 'auto' && !!settings.apiKey);
-  if (useLlm && !settings.apiKey) throw new Error('COLISEUM_MODE=llm needs OPENROUTER_API_KEY');
+  if (useLlm && !settings.apiKey) throw new Error('COLOSSEUM_MODE=llm needs OPENROUTER_API_KEY');
   let llmCount = 0;
   const entrants = roster.map((entry, i): Entrant => {
     const forcedBot = entry.model.startsWith('bot/');

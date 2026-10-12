@@ -198,5 +198,5 @@ function checkEnd(ctx: TickContext): void {
     for (const f of active) free(ctx, f, 'last_standing');
     return end(active.length === 1 ? `${active[0].name} is the last one standing and walks free.` : 'The last ones standing walk free.');
   }
-  if (state.tick >= state.config.maxTicks) return end('Time is up. The Coliseum keeps the rest.');
+  if (state.tick >= state.config.maxTicks) return end('Time is up. The Colosseum keeps the rest.');
 }

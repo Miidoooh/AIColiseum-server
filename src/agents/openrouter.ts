@@ -26,7 +26,7 @@ export async function chatCompletion(req: ChatRequest): Promise<string> {
       Authorization: `Bearer ${req.apiKey}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'http://localhost',
-      'X-Title': 'AI Coliseum',
+      'X-Title': 'AI Colosseum',
     },
     body: JSON.stringify({
       model: req.model,

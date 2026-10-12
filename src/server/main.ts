@@ -20,7 +20,7 @@ const llmJudge = config.apiKey && config.judgeModel ? new LlmJudge({ apiKey: con
 const server = createServer(createHandler({ store, hub, clientDir: config.clientDir, tickMs: config.tickMs, corsOrigin: config.corsOrigin }));
 server.listen(config.port, () => {
   const mode = config.mode === 'auto' ? (config.apiKey ? 'real models' : 'demo bots (no OPENROUTER_API_KEY set)') : config.mode;
-  console.log(`\n  AI Coliseum running on http://localhost:${config.port}`);
+  console.log(`\n  AI Colosseum running on http://localhost:${config.port}`);
   console.log(`  Fighters: ${mode} · tick ${config.tickMs}ms · judge: ${llmJudge ? config.judgeModel : 'rules only'}\n`);
 });
 
@@ -40,13 +40,13 @@ for (;;) {
         now: () => Date.now(),
         sleep: (ms) => sleep(ms),
         llmJudge,
-        log: (msg) => console.log(`[coliseum] ${msg}`),
+        log: (msg) => console.log(`[colosseum] ${msg}`),
       },
     );
     const meta = buildMeta(events);
     if (meta) await store.saveMeta(meta);
   } catch (err) {
-    console.error(`[coliseum] match ${matchId} failed:`, err);
+    console.error(`[colosseum] match ${matchId} failed:`, err);
   }
   hub.intermission(Date.now() + config.intermissionMs);
   await sleep(config.intermissionMs);
