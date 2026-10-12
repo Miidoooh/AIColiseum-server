@@ -5,6 +5,7 @@ import { getHolding, isWalletAddress, verifyBurn, verifyWalletSignature, type Rp
 import { CallBook, callWindow, validatePicks } from '../crowd/calls';
 import { GladiatorRegistry, gladiatorProfile, publicGladiator, validateGladiator } from '../crowd/gladiators';
 import type { TokenInfo } from '../crowd/token-config';
+import { validateTurns, type VillainService } from '../crowd/villain';
 import type { WardenDesk } from '../crowd/warden';
 import type { MatchStore } from '../match/store';
 import { callMessage, parseGladiatorMemo } from '../shared/crowd';
@@ -24,6 +25,7 @@ export interface CrowdDeps {
   season: number;
   verify?: typeof verifyBurn;
   holding?: typeof getHolding;
+  villain?: VillainService;
 }
 
 type Send = (res: ServerResponse, body: unknown, status?: number) => void;
@@ -45,6 +47,7 @@ export function createCrowdRoutes(deps: CrowdDeps, send: Send) {
   const verify = deps.verify ?? verifyBurn;
   const holding = deps.holding ?? getHolding;
   const limiter = new RateLimiter(12, 60_000);
+  const chatLimiter = new RateLimiter(20, 10 * 60_000);
 
   const houseNames = new Set(deps.pool.pool.map((e) => e.name.toLowerCase()));
   const models = new Map(deps.pool.pool.map((e) => [e.model, e.label] as const));
@@ -58,6 +61,18 @@ export function createCrowdRoutes(deps: CrowdDeps, send: Send) {
     const method = req.method ?? 'GET';
     if (path === '/api/token' && method === 'GET') {
       send(res, await deps.token.view());
+      return true;
+    }
+    if (path === '/api/villain' && method === 'GET' && deps.villain) {
+      send(res, await deps.villain.profile());
+      return true;
+    }
+    if (path === '/api/villain/chat' && method === 'POST' && deps.villain) {
+      if (!chatLimiter.allow(clientIp(req))) throw new HttpError(429, 'The villain is tired of you. Come back in a few minutes.');
+      const body = (await readJson(req, 16384)) as { messages?: unknown };
+      const turns = validateTurns(body.messages);
+      if (typeof turns === 'string') throw new HttpError(400, turns);
+      send(res, { reply: await deps.villain.reply(turns, AbortSignal.timeout(60_000)) });
       return true;
     }
     if (path === '/api/chain/blockhash' && method === 'GET') {

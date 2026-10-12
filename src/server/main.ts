@@ -7,6 +7,7 @@ import { createRpc } from '../chain/solana';
 import { CallBook, outcomeOf } from '../crowd/calls';
 import { GladiatorRegistry } from '../crowd/gladiators';
 import { TokenInfo, loadTokenConfig } from '../crowd/token-config';
+import { VillainService } from '../crowd/villain';
 import { WardenDesk } from '../crowd/warden';
 import { Rng, randomSeed } from '../engine/rng';
 import { LlmJudge } from '../match/llm-judge';
@@ -39,7 +40,14 @@ const json = (res: import('node:http').ServerResponse, body: unknown, status = 2
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
   res.end(JSON.stringify(body));
 };
-const crowd = createCrowdRoutes({ rpc, token, ledger, warden, calls, gladiators, hub, store, pool, season: live.season }, json);
+const villain = new VillainService({
+  store,
+  pool,
+  season: live.season,
+  apiKey: config.apiKey,
+  liveStats: () => (hub.status().mode === 'llm' ? hub.liveStats() : null),
+});
+const crowd = createCrowdRoutes({ rpc, token, ledger, warden, calls, gladiators, hub, store, pool, season: live.season, villain }, json);
 
 const server = createServer(
   createHandler({ store, hub, pool, season: live.season, clientDir: config.clientDir, tickMs: config.tickMs, corsOrigin: config.corsOrigin, crowd }),
